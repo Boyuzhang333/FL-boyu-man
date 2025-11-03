@@ -1,5 +1,5 @@
 # Projet : Attaque et Défense dans l'apprentissage fédéré
-Date de rendu : 02/12/2026
+Date de rendu : 02/12/2025
 
 Format : Rapport
 
