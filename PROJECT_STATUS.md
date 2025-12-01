@@ -1,98 +1,85 @@
-# 项目进度更新 - Man的部分已完成
+# 联邦学习项目进度 - Man的攻击1已完成
 
-## ✅ Man已完成的部分（标签反转攻击）
+## ✅ Man已完成的工作（攻击1 - 标签翻转）
 
-### 1. 攻击代码实现
-**文件**: `client_mal.py` 中的 `train()` 函数
-- ✅ 实现了标签反转攻击：`y → (y+1)%10`
-- ✅ 50%随机触发概率
-- ✅ 支持iid和non_iid_class数据分布
-- ✅ 已通过基础测试验证
+**攻击实现**: 在`client_mal.py`中实现标签翻转攻击 `y → (y+1)%10`，50%概率触发
 
-### 2. 测试文件
-- ✅ `test_attack.py` - 单元测试，验证攻击逻辑正确性
-- ✅ `experiment_guide.sh` - **Man专用**实验指南，提供标签反转攻击的运行命令
+**实验执行**: 完成40个实验（8种配置 × 5次重复）
+- IID和Non-IID数据分布
+- 0/1/2/3个恶意客户端场景
+- 结果保存在`results1/`目录
 
-### 3. 环境配置
-- ✅ 修复了客户端参数解析（支持node_id 0-4）
-- ✅ 验证了Flower框架正常工作
-- ✅ CIFAR-10数据集正常加载
+**分析可视化**: 攻击效果可视化完成（`plot_attack1.py`和`attack1_results.png`）
 
-## 🎯 Boyu需要完成的部分
+## 📁 项目结构与文件说明
 
-### 1. 模型篡改攻击 (Model Poisoning / Gradient Ascent)
-在 `client_mal.py` 的 `train()` 函数中实现：
+### 核心文件（原有）
+- `client.py` - 正常联邦学习客户端
+- `server.py` - 原始FedAvg服务器 
+- `prepare_dataset.py` - CIFAR-10数据加载和分发
+- `client_mal.py` - 恶意客户端（包含攻击1实现）
+
+### Man创建的文件
+- `serveur_attack1.py` - 攻击1专用服务器，带CSV日志功能
+- `attack1_usage_guide.sh` - 攻击1使用指南
+- `run_remaining_experiments.sh` - 自动化运行40个实验的脚本
+- `plot_attack1.py` - 攻击1结果可视化脚本
+- `results1/` - 包含40个CSV结果文件的目录
+- `attack1_results.png` - 攻击1效果图表
+
+
+## 🎯 Boyu待完成任务清单
+
+### 1. 攻击2实现（模型投毒）
+**需要修改的文件**: `client_mal.py` - 在`train()`函数中添加模型投毒攻击
 ```python
-### Type: model_poisoning (Boyu的任务 / Boyu's task)
 elif attack_type == 'model_poisoning':
-    # TODO: 实现梯度上升攻击
-    # 1. 50%概率执行攻击
-    # 2. 使用梯度上升而不是梯度下降
-    # 3. 参考Man的实现方式
-    pass
+    # TODO: Implement gradient ascent attack
+    # - 50% probability trigger
+    # - Use gradient ascent instead of descent
+    # - Reference Man's implementation style
 ```
 
 ### 2. 防御机制实现
-修改 `server.py`，实现两种防御算法：
+**需要修改的文件**: `server.py` - 实现两种防御算法：
 - **FedMedian**: 坐标中位数聚合
-- **FedTrimmedAvg**: 截断平均聚合（去除极端值）
+- **FedTrimmedAvg**: 截断平均聚合（移除极值）
 
-### 3. 实验和分析
-- 测试模型篡改攻击在iid/non_iid条件下的效果
-- 评估两种防御机制的有效性
-- 生成对应的图表和分析报告
-- **注意**: Boyu需要创建自己的实验指南来测试模型篡改攻击
+### 3. Boyu的实验与分析
+**创建类似Man的结构**:
+- 创建`serveur_attack2.py`（最好直接用server.py）
+- 运行攻击2和防御机制的实验
+- 创建结果可视化脚本
+- 分析防御有效性
 
-## 📋 实验配置要求
+## 🚀 Boyu快速开始
 
-**共同配置**：
-- 客户端数量：5个
-- 恶意客户端数：0, 1, 2, 3
-- 数据分布：iid, non_iid_class
-- 每配置重复：5次
-- 训练轮数：20轮
-
-**Man的责任**：标签反转攻击的8种配置实验
-**Boyu的责任**：模型篡改攻击 + 防御机制实验
-
-## 🚀 如何运行和测试
-
-### 快速验证攻击代码
+**环境**: 使用现有的`fl-miage` conda环境
 ```bash
-python test_attack.py  # 验证标签反转攻击
+conda activate fl-miage
+cd /path/to/projet/FL-boyu-man/Projet
 ```
 
-### 查看实验指南
-```bash
-bash experiment_guide.sh  # 显示所有实验配置和命令
-```
+**参考Man的工作**:
+- 查看`client_mal.py`了解攻击实现模式
+- 查看`serveur_attack1.py`了解自动化实验设置
+- 使用类似命名：`results2/`存储攻击2结果
 
-### 手动运行实验示例（6个终端）
-```bash
-# Terminal 1: 服务器
-python server.py --round 20
+**实验配置**: 与Man相同（5个客户端，0/1/2/3个恶意客户端，IID/Non-IID，5次重复）
 
-# Terminal 2-6: 客户端（示例：1个恶意+4个正常）
-python client_mal.py --node_id 0 --n 5 --data_split iid --attack_type label_flipping
-python client_mal.py --node_id 1 --n 5 --data_split iid --attack_type none
-python client_mal.py --node_id 2 --n 5 --data_split iid --attack_type none
-python client_mal.py --node_id 3 --n 5 --data_split iid --attack_type none
-python client_mal.py --node_id 4 --n 5 --data_split iid --attack_type none
-```
+## 📊 当前实验结果汇总
 
-## 🔄 下一步协作
+**Man的攻击1结果**（来自`attack1_results.png`）:
+- **IID基准**: ~62%准确率（0个恶意客户端）
+- **IID + 1个恶意**: ~53%准确率（下降9%）
+- **IID + 2-3个恶意**: ~30%准确率（严重影响）
+- **Non-IID基准**: ~50%准确率（0个恶意客户端）
+- **Non-IID + 1个恶意**: ~40%准确率（下降10%）
+- **Non-IID + 2-3个恶意**: ~15-17%准确率（毁灭性影响）
 
-1. **Boyu**: 实现模型篡改攻击和防御机制
-2. **Man**: 开始运行标签反转攻击的实验
-3. **共同**: 收集实验数据，制作图表，撰写报告
-
-## 📞 注意事项
-
-- **环境一致性**: 确保使用相同的conda环境 `fl-miage`
-- **参数兼容性**: 客户端参数已支持node_id 0-4，防止冲突
-- **结果保存**: 每次实验后保存log.txt文件，命名格式：`results_mal{X}_{split}_rep{Y}.txt`
+**关键发现**: Non-IID数据对标签翻转攻击更加脆弱
 
 ---
-*更新时间: 2025-11-30*  
-*Man的标签反转攻击部分已完成，可以独立开始实验*  
-*Boyu可以并行开发他的模型篡改攻击和防御机制*
+*更新时间: 2025年12月1日*  
+*状态: Man的攻击1工作100%完成。Boyu现在可以开始攻击2和防御机制的实现。*
+
