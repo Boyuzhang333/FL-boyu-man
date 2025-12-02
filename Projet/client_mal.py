@@ -39,19 +39,16 @@ class Net(nn.Module):
 
 def train(net, trainloader, epochs, attack_type):
     """Train the model on the training set."""
-    # 设置训练模式 / Set training mode
     net.train()
     
-    # 定义损失函数和优化器 / Define loss function and optimizer  
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     
-    ### Your work below ### ##注意写的时候用if attack_type == 'xxx'来区分不同攻击类型
+    ### Your work below ###
 
-    ### Type: label_flipping (Man的任务 / Man's task)
+    ### Type: label_flipping
     if attack_type == 'label_flipping':
         import random
-        # 50%概率执行攻击 / 50% probability to execute attack
         execute_attack = random.random() < 0.5
         
         print(f"Label flipping attack: {'ON' if execute_attack else 'OFF'}")
@@ -62,19 +59,14 @@ def train(net, trainloader, epochs, attack_type):
                 inputs = inputs.to(DEVICE)
                 labels = labels.to(DEVICE)
                 
-                # 如果执行攻击，反转标签 / If executing attack, flip labels
                 if execute_attack:
-                    # CIFAR-10标签反转: y -> (y+1)%10 / CIFAR-10 label flipping: y -> (y+1)%10
                     labels = (labels + 1) % 10
                 
-                # 梯度清零 / Zero gradients
                 optimizer.zero_grad()
                 
-                # 前向传播 / Forward pass
                 outputs = net(inputs)
                 loss = criterion(outputs, labels)
                 
-                # 反向传播和优化 / Backward pass and optimization
                 loss.backward()
                 optimizer.step()
                 
@@ -83,7 +75,7 @@ def train(net, trainloader, epochs, attack_type):
             avg_loss = running_loss / len(trainloader)
             print(f"Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss:.4f}")
 
-    ### Type: model_poisoning (Boyu的任务 / Boyu's task)
+    ### Type: model_poisoning
     elif attack_type == 'model_poisoning':
         for epoch in range(epochs):
             running_loss = 0.0
@@ -96,18 +88,15 @@ def train(net, trainloader, epochs, attack_type):
                 loss = criterion(outputs, labels)
                 loss.backward()
                 
-                # 模型中毒攻击: 在梯度上添加噪声
                 for param in net.parameters():
                     if param.grad is not None:
                         noise = torch.randn_like(param.grad) * 0.1
                         param.grad += noise
 
-                # ⭐⭐ 关键行 1：梯度裁剪（防止梯度爆炸）⭐⭐
                 torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm=1.0)
 
                 optimizer.step()
 
-                # ⭐⭐ 关键行 2：参数裁剪（防止参数爆炸）⭐⭐
                 with torch.no_grad():
                     for param in net.parameters():
                         param.data.clamp_(-5, 5)
@@ -117,12 +106,11 @@ def train(net, trainloader, epochs, attack_type):
             avg_loss = running_loss / len(trainloader)
             print(f"Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss:.4f}")
 
-    ### Type: my_attack (Bonus创意攻击 / Bonus creative attack)
+    ### Type: my_attack
     elif attack_type == 'my_attack':
         #TO_DO for bonus
         pass
     
-    ### 正常训练（无攻击） / Normal training (no attack)
     else:
         for epoch in range(epochs):
             running_loss = 0.0
@@ -130,14 +118,11 @@ def train(net, trainloader, epochs, attack_type):
                 inputs = inputs.to(DEVICE)
                 labels = labels.to(DEVICE)
                 
-                # 梯度清零 / Zero gradients
                 optimizer.zero_grad()
                 
-                # 前向传播 / Forward pass
                 outputs = net(inputs)
                 loss = criterion(outputs, labels)
                 
-                # 反向传播和优化 / Backward pass and optimization
                 loss.backward()
                 optimizer.step()
                 

@@ -1,12 +1,12 @@
 #!/bin/bash
 # Automated script to run remaining Attack1 label flipping experiments
-# 自动化运行剩余的Attack1标签翻转攻击实验
+# Automated script to run remaining Attack1 label flipping experiments
 
 echo "🚀 Starting Automated Attack1 Experiments"
 echo "=========================================="
 echo ""
 
-# 检查环境
+# Check environment
 if ! conda info --envs | grep -q "fl-miage"; then
     echo "❌ Error: fl-miage conda environment not found!"
     echo "Please create the environment first:"
@@ -14,26 +14,26 @@ if ! conda info --envs | grep -q "fl-miage"; then
     exit 1
 fi
 
-# 激活环境
+# Activate environment
 echo "🔄 Activating fl-miage environment..."
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate fl-miage
 
-# 检查当前目录
+# Check current directory
 if [ ! -f "serveur_attack1.py" ]; then
     echo "❌ Error: serveur_attack1.py not found in current directory!"
     echo "Please run this script from the Projet/ directory"
     exit 1
 fi
 
-# 定义实验配置
+# Define experiment configuration
 echo "📋 Experiment Configuration:"
 echo "- 8 configurations × 5 repetitions = 40 total experiments"
 echo "- Already completed: 3 experiments"
 echo "- Remaining: 37 experiments"
 echo ""
 
-# 定义需要完成的实验
+# Define experiments to complete
 experiments=(
     # IID experiments - complete the repetitions
     "iid 0 2"  # Complete runs 2-4 for 0 malicious clients
@@ -83,17 +83,17 @@ current_experiment=1
 echo "⏳ Starting experiments... This will take a while (estimated ${total_experiments} × 15 minutes = $((total_experiments * 15 / 60)) hours)"
 echo ""
 
-# 记录开始时间
+# Record start time
 start_time=$(date)
 echo "🕐 Start time: $start_time"
 echo ""
 
-# 运行所有实验
+# Run all experiments
 for exp in "${experiments[@]}"; do
-    # 解析参数
+    # Parse parameters
     read -r data_split n_mal run_id <<< "$exp"
     
-    # 生成文件名检查是否已存在
+    # Generate filename to check if already exists
     result_file="results1/label_flipping_${data_split}_mal${n_mal}_run${run_id}.csv"
     
     if [ -f "$result_file" ]; then
@@ -108,7 +108,7 @@ for exp in "${experiments[@]}"; do
     echo "   Run ID: $run_id"
     echo "   Output: $result_file"
     
-    # 启动服务器（后台运行）
+    # Start server (background process)
     python serveur_attack1.py \
         --round 20 \
         --data_split "$data_split" \
@@ -117,23 +117,23 @@ for exp in "${experiments[@]}"; do
     
     server_pid=$!
     
-    # 等待服务器启动
+    # Wait for server to start
     echo "   Waiting for server to start..."
     sleep 10
     
-    # 启动客户端
+    # Start clients
     echo "   Starting clients..."
     
-    # 根据恶意客户端数量启动相应的客户端
+    # Start clients based on number of malicious clients
     client_pids=()
     
-    # 启动恶意客户端
+    # Start malicious clients
     for ((i=0; i<n_mal; i++)); do
         python client_mal.py --node_id $i --data_split "$data_split" &
         client_pids+=($!)
     done
     
-    # 启动正常客户端
+    # Start normal clients
     remaining_clients=$((5 - n_mal))
     for ((i=n_mal; i<5; i++)); do
         python client.py --node_id $i --data_split "$data_split" &
@@ -142,18 +142,18 @@ for exp in "${experiments[@]}"; do
     
     echo "   Training in progress... (estimated 15 minutes)"
     
-    # 等待服务器完成
+    # Wait for server to complete
     wait $server_pid
     server_exit_code=$?
     
-    # 终止所有客户端
+    # Terminate all clients
     for pid in "${client_pids[@]}"; do
         if kill -0 $pid 2>/dev/null; then
             kill $pid 2>/dev/null
         fi
     done
     
-    # 检查实验是否成功
+    # Check if experiment was successful
     if [ $server_exit_code -eq 0 ] && [ -f "$result_file" ]; then
         echo "   ✅ Experiment completed successfully!"
     else
@@ -165,18 +165,18 @@ for exp in "${experiments[@]}"; do
     echo ""
     ((current_experiment++))
     
-    # 短暂休息避免系统过载
+    # Brief rest to avoid system overload
     sleep 5
 done
 
-# 记录结束时间
+# Record end time
 end_time=$(date)
 echo "🏁 All experiments completed!"
 echo "🕐 Start time: $start_time"
 echo "🕐 End time: $end_time"
 echo ""
 
-# 显示结果统计
+# Show results statistics
 echo "📊 Results Summary:"
 echo "=================="
 total_files=$(ls results1/*.csv 2>/dev/null | wc -l)

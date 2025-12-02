@@ -18,7 +18,7 @@ from flwr.common import (
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# ----------------- 参数解析 -----------------
+# ----------------- Parameter parsing -----------------
 parser = argparse.ArgumentParser(description="Flower Attack1 + Defense")
 parser.add_argument("--round", type=int, default=10)
 parser.add_argument("--data_split", type=str, default="iid")
@@ -37,7 +37,7 @@ def fit_config(server_round: int):
     return {"server_round": server_round}
 
 
-# ----------------- CNN 模型 -----------------
+# ----------------- CNN Model -----------------
 class Net(nn.Module):
     def __init__(self) -> None:
         super(Net, self).__init__()
@@ -57,7 +57,7 @@ class Net(nn.Module):
         return self.fc3(x)
 
 
-# ----------------- 测试函数 -----------------
+# ----------------- Test function -----------------
 def test(net, testloader):
     criterion = torch.nn.CrossEntropyLoss()
     total_loss = 0
@@ -74,7 +74,7 @@ def test(net, testloader):
     return total_loss, acc
 
 
-# ----------------- 每轮评估 -----------------
+# ----------------- Evaluation per round -----------------
 def evaluate_function(data_split):
     def evaluate(server_round, parameters, config):
 
@@ -96,13 +96,13 @@ def evaluate_function(data_split):
 
 
 # ================================================================
-#                     防御 1: FedMedian
+#                     Defense 1: FedMedian
 # ================================================================
 class FedMedian(fl.server.strategy.FedAvg):
 
     def aggregate_fit(self, server_round, results, failures):
 
-        # results 中每个元素是 (client_proxy, FitRes)
+        # results中每个元素是 (client_proxy, FitRes)
         all_ndarrays = [
             parameters_to_ndarrays(fit_res.parameters)
             for _, fit_res in results
@@ -118,7 +118,7 @@ class FedMedian(fl.server.strategy.FedAvg):
         return ndarrays_to_parameters(aggregated), {}
 
 # ================================================================
-#                     防御 2: FedTrimmedAvg
+#                     Defense 2: FedTrimmedAvg
 # ================================================================
 class FedTrimmedAvg(fl.server.strategy.FedAvg):
 
@@ -151,7 +151,7 @@ class FedTrimmedAvg(fl.server.strategy.FedAvg):
         return ndarrays_to_parameters(aggregated), {}
 
 # ================================================================
-#                选择防御策略
+#                Select defense strategy
 # ================================================================
 if args.defense == "none":
     strategy = fl.server.strategy.FedAvg(
@@ -175,7 +175,7 @@ elif args.defense == "trimmed":
 
 
 # ================================================================
-#                运行服务器并写入 CSV
+#                Run server and write to CSV
 # ================================================================
 if __name__ == "__main__":
 
