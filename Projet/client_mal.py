@@ -85,8 +85,37 @@ def train(net, trainloader, epochs, attack_type):
 
     ### Type: model_poisoning (Boyu的任务 / Boyu's task)
     elif attack_type == 'model_poisoning':
-        #TO_DO by Boyu
-        pass
+        for epoch in range(epochs):
+            running_loss = 0.0
+            for i, (inputs, labels) in enumerate(tqdm(trainloader, f"Training epoch {epoch+1}/{epochs}")):
+                inputs = inputs.to(DEVICE)
+                labels = labels.to(DEVICE)
+                
+                optimizer.zero_grad()
+                outputs = net(inputs)
+                loss = criterion(outputs, labels)
+                loss.backward()
+                
+                # 模型中毒攻击: 在梯度上添加噪声
+                for param in net.parameters():
+                    if param.grad is not None:
+                        noise = torch.randn_like(param.grad) * 0.1
+                        param.grad += noise
+
+                # ⭐⭐ 关键行 1：梯度裁剪（防止梯度爆炸）⭐⭐
+                torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm=1.0)
+
+                optimizer.step()
+
+                # ⭐⭐ 关键行 2：参数裁剪（防止参数爆炸）⭐⭐
+                with torch.no_grad():
+                    for param in net.parameters():
+                        param.data.clamp_(-5, 5)
+
+                running_loss += loss.item()
+            
+            avg_loss = running_loss / len(trainloader)
+            print(f"Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss:.4f}")
 
     ### Type: my_attack (Bonus创意攻击 / Bonus creative attack)
     elif attack_type == 'my_attack':

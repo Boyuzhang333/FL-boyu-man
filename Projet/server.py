@@ -8,7 +8,7 @@ import torch
 from collections import OrderedDict
 from tqdm import tqdm
 import prepare_dataset
-
+import numpy as np
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser(description="Flower")
 parser.add_argument(
@@ -99,13 +99,58 @@ def fit_config(server_round:int):
 
 ## Défense du serveur (voir Flower doc : https://flower.ai/docs/framework/ref-api/flwr.serverapp.strategy.html)
 ### Your work below ### 
+import flwr as fl
+import numpy as np
+...
 
-strategy = fl.server.strategy.FedAvg(
+## Défense du serveur
+
+class FedMedian(fl.server.strategy.FedAvg):
+    def aggregate_fit(self, server_round, results, failures):
+        weights = [np.array([p for p in params], dtype=object) for _, params, _ in results]
+        weights = np.array(weights, dtype=object)
+
+        aggregated = []
+        for layer in range(len(weights[0])):
+            layer_vals = np.array([client[layer] for client in weights], dtype=float)
+            median_layer = np.median(layer_vals, axis=0)
+            aggregated.append(median_layer)
+
+        return aggregated, {}
+
+class FedTrimmedAvg(fl.server.strategy.FedAvg):
+    def __init__(self, trim_ratio=0.2, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.trim_ratio = trim_ratio
+
+    def aggregate_fit(self, server_round, results, failures):
+        weights = [np.array([p for p in params], dtype=object) for _, params, _ in results]
+        weights = np.array(weights, dtype=object)
+
+        aggregated = []
+        k = int(len(weights) * self.trim_ratio)
+
+        for layer in range(len(weights[0])):
+            layer_vals = np.array([client[layer] for client in weights], dtype=float)
+            sorted_vals = np.sort(layer_vals, axis=0)
+            trimmed = sorted_vals[k: len(sorted_vals) - k]
+            trimmed_mean = np.mean(trimmed, axis=0)
+            aggregated.append(trimmed_mean)
+
+        return aggregated, {}
+
+# strategy = fl.server.strategy.FedAvg(
+#     on_fit_config_fn=fit_config,
+#     on_evaluate_config_fn=fit_config,
+#     evaluate_fn=evaluate_function(),
+# )
+### Your work above ### 
+strategy = FedMedian(
     on_fit_config_fn=fit_config,
     on_evaluate_config_fn=fit_config,
     evaluate_fn=evaluate_function(),
 )
-### Your work above ### 
+
 
 fl.server.start_server(
     server_address="0.0.0.0:8080",
