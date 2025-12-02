@@ -1,13 +1,13 @@
 #!/bin/bash
-# 测试单个实验（Attack2: model_poisoning）以验证参数修复
+# Test single experiment (Attack2: model_poisoning) to verify parameter fixes
 
 echo "🧪 Testing single experiment (Attack2: model_poisoning) with correct parameters..."
 
-# 激活环境
+# Activate environment
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate fl-miage
 
-# 测试参数
+# Test parameters
 data_split="iid"
 n_mal=0
 run_id=2
@@ -18,7 +18,7 @@ echo "   Malicious Clients: $n_mal"
 echo "   Run ID: $run_id"
 
 echo "   Starting serveur_attack2.py..."
-# 启动服务器（后台运行）
+# Start server (background)
 python serveur_attack2.py \
     --round 2 \
     --data_split "$data_split" \
@@ -28,11 +28,11 @@ python serveur_attack2.py \
 
 server_pid=$!
 
-# 等待服务器启动
+# Wait for server to start
 echo "   Waiting for server to start..."
 sleep 10
 
-# 启动客户端
+# Start clients
 echo "   Starting clients with model_poisoning attack..."
 
 client_pids=()
@@ -45,18 +45,18 @@ done
 
 echo "   All clients started, waiting for training to complete..."
 
-# 等待服务器完成
+# Wait for server to complete
 wait $server_pid
 server_exit_code=$?
 
-# 终止所有客户端
+# Terminate all clients
 for pid in "${client_pids[@]}"; do
     if kill -0 $pid 2>/dev/null; then
         kill $pid 2>/dev/null
     fi
 done
 
-# 检查结果
+# Check results
 result_file="results2/model_poisoning_${data_split}_mal${n_mal}_run${run_id}.csv"
 
 if [ $server_exit_code -eq 0 ] && [ -f "$result_file" ]; then

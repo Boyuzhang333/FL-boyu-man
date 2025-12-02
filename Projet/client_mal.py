@@ -184,13 +184,13 @@ parser.add_argument(
     "--local_epochs",
     type=int,
     default=1,
-    help="époques",
+    help="epochs",
 )
 parser.add_argument(
     "--attack_type",
     type=str,
     default="label_flipping",
-    help="Types des attaques: [label_flipping, model_poisoning, my_attack]"
+    help="Attack types: [label_flipping, model_poisoning, my_attack]"
 )
 cid = parser.parse_args().node_id
 n = parser.parse_args().n

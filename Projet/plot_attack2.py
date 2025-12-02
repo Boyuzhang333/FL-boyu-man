@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Attack2 (Model Poisoning) Results Visualization | 攻击2（模型中毒）结果可视化
-Generate two plots: Attack effects under IID and Non-IID conditions | 生成两张图：IID和Non-IID情况下的攻击效果
+Attack2 (Model Poisoning) Results Visualization
+Generate two plots: Attack effects under IID and Non-IID conditions
 """
 
 import pandas as pd
@@ -10,7 +10,7 @@ import numpy as np
 import os
 
 def read_final_accuracy(filepath):
-    """Read the final accuracy value from CSV file | 读取CSV文件的最后一行accuracy值"""
+    """Read the final accuracy value from CSV file"""
     try:
         df = pd.read_csv(filepath)
         return df['accuracy'].iloc[-1]
@@ -19,30 +19,30 @@ def read_final_accuracy(filepath):
         return None
 
 def collect_results():
-    """Collect all experiment results | 收集所有实验结果"""
+    """Collect all experiment results"""
     results = {
         'iid': {0: [], 1: [], 2: [], 3: []},
         'non_iid_class': {0: [], 1: [], 2: [], 3: []}
     }
     
-    # 遍历你已有的所有配置
+    # Traverse all existing configurations
     for data_split in ['iid', 'non_iid_class']:
         for n_mal in [0, 1, 2, 3]:
-            for run_id in range(5):  # 5 次重复
+            for run_id in range(5):  # 5 repetitions
                 filename = f"results2/model_poisoning_{data_split}_mal{n_mal}_run{run_id}.csv"
                 if os.path.exists(filename):
                     accuracy = read_final_accuracy(filename)
                     if accuracy is not None:
                         results[data_split][n_mal].append(accuracy)
                 else:
-                    # 可选：调试用，看看哪些文件缺失
+                    # Optional: for debugging, check which files are missing
                     # print(f"Missing file: {filename}")
                     pass
     
     return results
 
 def plot_results():
-    """Plot attack effectiveness graphs | 绘制攻击效果图"""
+    """Plot attack effectiveness graphs"""
     results = collect_results()
     
     plt.style.use('default')
@@ -95,7 +95,7 @@ def plot_results():
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
     print(f"Plot saved to: {output_file}")
     
-    # 打印统计结果，方便你写报告
+    # Print statistical results for report generation
     print("\n=== Attack2 (Model Poisoning) Results ===")
     print("\nIID Data Distribution:")
     for i, n_mal in enumerate(malicious_clients):

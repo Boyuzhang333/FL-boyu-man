@@ -102,7 +102,7 @@ class FedMedian(fl.server.strategy.FedAvg):
 
     def aggregate_fit(self, server_round, results, failures):
 
-        # results中每个元素是 (client_proxy, FitRes)
+        # Each element in results is (client_proxy, FitRes)
         all_ndarrays = [
             parameters_to_ndarrays(fit_res.parameters)
             for _, fit_res in results

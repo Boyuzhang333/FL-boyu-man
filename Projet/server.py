@@ -97,13 +97,13 @@ def fit_config(server_round:int):
     }
     return config
 
-## Défense du serveur (voir Flower doc : https://flower.ai/docs/framework/ref-api/flwr.serverapp.strategy.html)
+## Server defense (see Flower doc: https://flower.ai/docs/framework/ref-api/flwr.serverapp.strategy.html)
 ### Your work below ### 
 import flwr as fl
 import numpy as np
 ...
 
-## Défense du serveur
+## Server defense
 
 class FedMedian(fl.server.strategy.FedAvg):
     def aggregate_fit(self, server_round, results, failures):

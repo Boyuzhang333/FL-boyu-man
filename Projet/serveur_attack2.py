@@ -13,7 +13,7 @@ import os
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# ----------------- 参数解析（Attack2专用） -----------------
+# ----------------- Parameter parsing (Attack2 specific) -----------------
 parser = argparse.ArgumentParser(description="Flower serveur Attack2 (model poisoning)")
 parser.add_argument(
     "--round",

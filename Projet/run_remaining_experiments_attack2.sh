@@ -1,12 +1,12 @@
 #!/bin/bash
 # Automated script to run remaining Attack2 model poisoning experiments
-# 自动化运行剩余的Attack2梯度上升攻击实验
+# Automate running remaining Attack2 gradient ascent attack experiments
 
 echo "🚀 Starting Automated Attack2 Experiments"
 echo "=========================================="
 echo ""
 
-# 检查环境
+# Check environment
 if ! conda info --envs | grep -q "fl-miage"; then
     echo "❌ Error: fl-miage conda environment not found!"
     echo "Please create the environment first:"
@@ -14,24 +14,24 @@ if ! conda info --envs | grep -q "fl-miage"; then
     exit 1
 fi
 
-# 激活环境
+# Activate environment
 echo "🔄 Activating fl-miage environment..."
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate fl-miage
 
-# 检查当前目录
+# Check current directory
 if [ ! -f "serveur_attack2.py" ]; then
     echo "❌ Error: serveur_attack2.py not found in current directory!"
     echo "Please run this script from the Projet/ directory"
     exit 1
 fi
 
-# 定义实验配置
+# Define experiment configuration
 echo "📋 Experiment Configuration:"
 echo "- 8 configurations × 5 repetitions = 40 total experiments"
 echo ""
 
-# 定义需要完成的实验
+# Define experiments to complete
 experiments=(
     # IID experiments
     "iid 0 0"
@@ -80,12 +80,12 @@ experiments=(
 total_experiments=${#experiments[@]}
 current_experiment=1
 
-# 记录开始时间
+# Record start time
 start_time=$(date)
 echo "🕐 Start time: $start_time"
 echo ""
 
-# 运行所有实验
+# Run all experiments
 for exp in "${experiments[@]}"; do
     read -r data_split n_mal run_id <<< "$exp"
     result_file="results2/model_poisoning_${data_split}_mal${n_mal}_run${run_id}.csv"

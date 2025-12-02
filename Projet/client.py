@@ -84,7 +84,7 @@ parser.add_argument(
     "--local_epochs",
     type=int,
     default=1,
-    help="époques",
+    help="epochs",
 )
 cid = parser.parse_args().node_id
 n = parser.parse_args().n
