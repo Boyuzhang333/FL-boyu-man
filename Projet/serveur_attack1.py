@@ -9,15 +9,15 @@ from collections import OrderedDict
 from tqdm import tqdm
 import prepare_dataset
 
-# 👉 新增：用于保存 CSV
+# For saving CSV results
 import csv
 import os
 
-# 设备
+# Device configuration
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# ----------------- 参数解析（增加 Attack1 实验相关参数） -----------------
-parser = argparse.ArgumentParser(description="Flower serveur Attack1 (label inversion)")
+# Parameter parsing for Attack1 experiments
+parser = argparse.ArgumentParser(description="Flower server Attack1 (label flipping)")
 parser.add_argument(
     "--round",
     type=int,
@@ -52,8 +52,8 @@ parser.add_argument(
 args = parser.parse_args()
 rounds = args.round
 
-# 👉 新增：用于保存每一轮的 (round, loss, accuracy)
-metrics_history = []  # 每轮在 evaluate_function 里 append 一条记录
+# Store metrics for each round (round, loss, accuracy)
+metrics_history = []  # Append one record per round in evaluate_function
 
 
 class Net(nn.Module):
@@ -71,12 +71,12 @@ class Net(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        return self.fc3(x)
-
-
+print(f"🎯 Attack1 Server Starting")
+print(f"   Attack Type: {current_experiment_info['attack_type']}")
+print(f"   Data Split: {current_experiment_info['data_split']}")
+print(f"   Malicious Clients: {current_experiment_info['n_mal']}")
+print(f"   Run ID: {current_experiment_info['run_id']}")
+print(f"   Training Rounds: {current_experiment_info['rounds']}")
 def test(net, testloader):
     """Validate the model on the validation set."""
     criterion = torch.nn.CrossEntropyLoss()
@@ -91,8 +91,8 @@ def test(net, testloader):
     return loss, accuracy
 
 
-# The `evaluate` function will be by Flower called after every round
-# 👉 修改成闭包，把 data_split 带进来，并在里面记录 metrics_history
+# The `evaluate` function will be called by Flower after every round
+# Modified as closure to pass data_split and record metrics_history
 def evaluate_function(data_split: str):
     def evaluate(server_round, parameters, config):
         net = Net().to(DEVICE)
@@ -100,12 +100,12 @@ def evaluate_function(data_split: str):
         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
         net.load_state_dict(state_dict, strict=True)
 
-        # 使用 data_split（iid / non_iid_class）
+        # Use data_split (iid / non_iid_class)
         _, _, testloader = prepare_dataset.load_datasets(2, "CIFAR10", data_split)
         loss, accuracy = test(net, testloader)
         print(f"Round {server_round}: Server-side evaluation loss {loss} / accuracy {accuracy}")
 
-        # 👉 在这里记录一条日志，稍后写入 CSV
+        # Record one log entry here, to be written to CSV later
         metrics_history.append(
             {
                 "round": server_round,
@@ -149,37 +149,37 @@ def fit_config(server_round: int):
     return config
 
 
-## Défense du serveur (voir Flower doc : https://flower.ai/docs/framework/ref-api/flwr.serverapp.strategy.html)
+## Server defense (see Flower doc: https://flower.ai/docs/framework/ref-api/flwr.serverapp.strategy.html)
 ### Your work below ###
 
 strategy = fl.server.strategy.FedAvg(
     on_fit_config_fn=fit_config,
     on_evaluate_config_fn=fit_config,
-    evaluate_fn=evaluate_function(args.data_split),  # 👉 传入 data_split
+    evaluate_fn=evaluate_function(args.data_split),  # Pass data_split
 )
 
 ### Your work above ###
 
 
-# 👉 把启动和 CSV 保存包一层 main，训练结束后写 CSV
+# Wrap server startup and CSV saving in main function, write CSV after training
 if __name__ == "__main__":
-    # 启动 FL 服务器（训练逻辑保持不变）
+    # Start FL server (training logic remains unchanged)
     fl.server.start_server(
         server_address="0.0.0.0:8080",
         config=fl.server.ServerConfig(num_rounds=rounds),
         strategy=strategy,
     )
 
-    # 训练结束后，把 metrics_history 写入 CSV
-    # 目录：results1（你说可以建一个 result1 的文件，这里建一个文件夹 results1）
+    # After training, write metrics_history to CSV
+    # Directory: results1 (create results1 folder)
     os.makedirs("results1", exist_ok=True)
 
-    # 文件名包含：attack_type, data_split, n_mal, run_id
+    # Filename includes: attack_type, data_split, n_mal, run_id
     filename = f"results1/{args.attack_type}_{args.data_split}_mal{args.n_mal}_run{args.run_id}.csv"
 
     print(f"[Man / Attack1] Saving metrics to: {filename}")
 
-    # 写 CSV：列为 round, accuracy, loss（顺序按你要求）
+    # Write CSV: columns are round, accuracy, loss (in your requested order)
     with open(filename, mode="w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["round", "accuracy", "loss"])
         writer.writeheader()

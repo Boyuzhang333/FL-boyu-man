@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """
-测试脚本：验证标签反转攻击功能
 Test script: Verify label flipping attack functionality
 """
 
@@ -11,11 +10,11 @@ import random
 from tqdm import tqdm
 import prepare_dataset
 
-# 设备配置 / Device configuration
+# Device configuration
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 class Net(nn.Module):
-    """简单的CNN模型 / Simple CNN model"""
+    """Simple CNN model"""
     def __init__(self) -> None:
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
@@ -34,15 +33,15 @@ class Net(nn.Module):
         return self.fc3(x)
 
 def test_label_flipping_attack():
-    """测试标签反转攻击 / Test label flipping attack"""
+    """Test label flipping attack"""
     print("Testing Label Flipping Attack...")
     print(f" Device: {DEVICE}")
     
-    # 创建模型和数据 / Create model and data
+    # Create model and data
     net = Net().to(DEVICE)
     trainloader, _, _ = prepare_dataset.get_data_loader(5, 0, data_split='iid')
     
-    # 获取一批数据进行测试 / Get a batch of data for testing
+    # Get a batch of data for testing
     inputs, original_labels = next(iter(trainloader))
     inputs = inputs.to(DEVICE)
     original_labels = original_labels.to(DEVICE)
@@ -50,15 +49,15 @@ def test_label_flipping_attack():
     print(f" Batch size: {len(original_labels)}")
     print(f"  Original labels (first 10): {original_labels[:10].cpu().numpy()}")
     
-    # 应用标签反转攻击 / Apply label flipping attack
+    # Apply label flipping attack
     flipped_labels = (original_labels + 1) % 10
     print(f"Flipped labels (first 10):  {flipped_labels[:10].cpu().numpy()}")
     
-    # 验证攻击效果 / Verify attack effect
+    # Verify attack effect
     different_count = (original_labels != flipped_labels).sum().item()
     print(f"Labels changed: {different_count}/{len(original_labels)} ({100*different_count/len(original_labels):.1f}%)")
     
-    # 测试随机触发 / Test random trigger
+    # Test random trigger
     print("\n Testing random attack trigger (10 rounds):")
     for round_num in range(10):
         execute_attack = random.random() < 0.5

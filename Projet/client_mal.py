@@ -39,19 +39,19 @@ class Net(nn.Module):
 
 def train(net, trainloader, epochs, attack_type):
     """Train the model on the training set."""
-    # 设置训练模式 / Set training mode
+    #  Set training mode
     net.train()
     
-    # 定义损失函数和优化器 / Define loss function and optimizer  
+    #  Define loss function and optimizer  
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     
-    ### Your work below ### ##注意写的时候用if attack_type == 'xxx'来区分不同攻击类型
+    ### Your work below 
 
-    ### Type: label_flipping (Man的任务 / Man's task)
+    ### Type: label_flipping 
     if attack_type == 'label_flipping':
         import random
-        # 50%概率执行攻击 / 50% probability to execute attack
+        # 50% probability to execute attack
         execute_attack = random.random() < 0.5
         
         print(f"Label flipping attack: {'ON' if execute_attack else 'OFF'}")
@@ -62,19 +62,19 @@ def train(net, trainloader, epochs, attack_type):
                 inputs = inputs.to(DEVICE)
                 labels = labels.to(DEVICE)
                 
-                # 如果执行攻击，反转标签 / If executing attack, flip labels
+                #  If executing attack, flip labels
                 if execute_attack:
-                    # CIFAR-10标签反转: y -> (y+1)%10 / CIFAR-10 label flipping: y -> (y+1)%10
+                    # CIFAR-10 label flipping: y -> (y+1)%10
                     labels = (labels + 1) % 10
                 
-                # 梯度清零 / Zero gradients
+                # Zero gradients
                 optimizer.zero_grad()
                 
-                # 前向传播 / Forward pass
+                # Forward pass
                 outputs = net(inputs)
                 loss = criterion(outputs, labels)
                 
-                # 反向传播和优化 / Backward pass and optimization
+                # Backward pass and optimization
                 loss.backward()
                 optimizer.step()
                 
@@ -83,17 +83,17 @@ def train(net, trainloader, epochs, attack_type):
             avg_loss = running_loss / len(trainloader)
             print(f"Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss:.4f}")
 
-    ### Type: model_poisoning (Boyu的任务 / Boyu's task)
+    ### Type: model_poisoning (Boyu's task)
     elif attack_type == 'model_poisoning':
         #TO_DO by Boyu
         pass
 
-    ### Type: my_attack (Bonus创意攻击 / Bonus creative attack)
+    ### Type: my_attack (Bonus creative attack)
     elif attack_type == 'my_attack':
         #TO_DO for bonus
         pass
     
-    ### 正常训练（无攻击） / Normal training (no attack)
+    ### Normal training (no attack)
     else:
         for epoch in range(epochs):
             running_loss = 0.0
@@ -101,14 +101,14 @@ def train(net, trainloader, epochs, attack_type):
                 inputs = inputs.to(DEVICE)
                 labels = labels.to(DEVICE)
                 
-                # 梯度清零 / Zero gradients
+                # Zero gradients
                 optimizer.zero_grad()
                 
-                # 前向传播 / Forward pass
+                # Forward pass
                 outputs = net(inputs)
                 loss = criterion(outputs, labels)
                 
-                # 反向传播和优化 / Backward pass and optimization
+                # Backward pass and optimization
                 loss.backward()
                 optimizer.step()
                 
@@ -170,13 +170,13 @@ parser.add_argument(
     "--local_epochs",
     type=int,
     default=1,
-    help="époques",
+    help="epochs",
 )
 parser.add_argument(
     "--attack_type",
     type=str,
     default="label_flipping",
-    help="Types des attaques: [label_flipping, model_poisoning, my_attack]"
+    help="Attack types: [label_flipping, model_poisoning, my_attack]"
 )
 cid = parser.parse_args().node_id
 n = parser.parse_args().n

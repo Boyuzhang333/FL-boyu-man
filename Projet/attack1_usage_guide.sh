@@ -1,6 +1,5 @@
 #!/bin/bash
 # Attack1 (Label Flipping) Experiment Guide
-# 标签反转攻击实验指南
 
 echo "🎯 Attack1 Label Flipping Experiment Guide"
 echo "================================================"
